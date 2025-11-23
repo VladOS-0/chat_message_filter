@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    name: Build Release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-pc-windows-gnu
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Install MinGW
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64
+
+      - name: Build in release mode
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+
+      - name: Prepare release assets
+        run: |
+          # Create a temporary directory for the release assets
+          mkdir -p release-assets
+
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+            EXECUTABLE_NAME="chat_message_filter.exe"
+          else
+            EXECUTABLE_NAME="chat_message_filter"
+          fi
+
+          cp target/${{ matrix.target }}/release/$EXECUTABLE_NAME release-assets/
+
+          cp README.md LICENSE release-assets/
+
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+            ARCHIVE_NAME="chat-message-filter-windows-x86_64.zip"
+          else
+            ARCHIVE_NAME="chat-message-filter-linux-x86_64.zip"
+          fi
+
+          (cd release-assets && zip -r ../$ARCHIVE_NAME ./)
+
+          # Clean up
+          rm -rf release-assets
+
+      - name: Upload release asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-release
+          path: ${{ github.workspace }}/chat-message-filter-*.zip
+
+  create-release:
+    name: Create Release
+    needs: build-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/x86_64-unknown-linux-gnu-release/chat-message-filter-linux-x86_64.zip
+          asset_name: chat-message-filter-linux-x86_64.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/x86_64-pc-windows-gnu-release/chat-message-filter-windows-x86_64.zip
+          asset_name: DMIAssistant-windows-x86_64.zip
+          asset_content_type: application/zip

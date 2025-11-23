@@ -33,13 +33,9 @@ impl Config {
             exclude_regex: None,
         };
         if !match_case {
-            config.include = config
-                .include
-                .and_then(|pattern| Some(pattern.to_lowercase()));
+            config.include = config.include.map(|pattern| pattern.to_lowercase());
 
-            config.exclude = config
-                .exclude
-                .and_then(|pattern| Some(pattern.to_lowercase()));
+            config.exclude = config.exclude.map(|pattern| pattern.to_lowercase());
         }
         if regex {
             config.compile_regexes()?;
@@ -90,20 +86,20 @@ impl Config {
             if !include_regex.is_match(&haystack) {
                 return Ok(false);
             }
-        } else if let Some(include) = &self.include {
-            if !haystack.contains(include) {
-                return Ok(false);
-            }
+        } else if let Some(include) = &self.include
+            && !haystack.contains(include)
+        {
+            return Ok(false);
         }
 
         if let Some(exclude_regex) = &self.exclude_regex {
             if exclude_regex.is_match(&haystack) {
                 return Ok(false);
             }
-        } else if let Some(exclude) = &self.exclude {
-            if haystack.contains(exclude) {
-                return Ok(false);
-            }
+        } else if let Some(exclude) = &self.exclude
+            && haystack.contains(exclude)
+        {
+            return Ok(false);
         }
 
         Ok(true)
