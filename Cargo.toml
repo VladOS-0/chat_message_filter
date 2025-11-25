@@ -3,7 +3,7 @@ name = "ss13_mlogfilter"
 description = "Simple CLI utility to filter Space Station 13 exported chat logs"
 license = "MIT"
 authors = ["Vlad0s <vladstolyarchuk7@gmail.com>"]
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 
 [dependencies]

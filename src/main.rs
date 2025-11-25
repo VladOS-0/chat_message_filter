@@ -1,5 +1,5 @@
 use std::{
-    fs::{OpenOptions, read_to_string},
+    fs::{OpenOptions, create_dir_all, read_to_string},
     io::{Read, Write, stdin},
     path::{Path, PathBuf},
     process::exit,
@@ -177,6 +177,18 @@ fn process_path(
         eprintln!("filter error: {}", err);
         exit(1);
     });
+
+    let parent_dir = output_path.parent().ok_or(anyhow::format_err!(
+        "invalid output path {}",
+        output_path.to_string_lossy()
+    ))?;
+    create_dir_all(parent_dir).map_err(|err| {
+        anyhow::format_err!(
+            "failed to create parent directories for {}: {}",
+            output_path.to_string_lossy(),
+            err
+        )
+    })?;
 
     let mut output_file = OpenOptions::new()
         .write(true)
