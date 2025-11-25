@@ -45,9 +45,9 @@ jobs:
           mkdir -p release-assets
 
           if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
-            EXECUTABLE_NAME="chat_message_filter.exe"
+            EXECUTABLE_NAME="ss13_mlogfilter.exe"
           else
-            EXECUTABLE_NAME="chat_message_filter"
+            EXECUTABLE_NAME="ss13_mlogfilter"
           fi
 
           cp target/${{ matrix.target }}/release/$EXECUTABLE_NAME release-assets/
@@ -55,9 +55,9 @@ jobs:
           cp README.md LICENSE release-assets/
 
           if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
-            ARCHIVE_NAME="chat-message-filter-windows-x86_64.zip"
+            ARCHIVE_NAME="ss13-mlogfilter-windows.zip"
           else
-            ARCHIVE_NAME="chat-message-filter-linux-x86_64.zip"
+            ARCHIVE_NAME="ss13-mlogfilter-linux.zip"
           fi
 
           (cd release-assets && zip -r ../$ARCHIVE_NAME ./)
@@ -69,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}-release
-          path: ${{ github.workspace }}/chat-message-filter-*.zip
+          path: ${{ github.workspace }}/ss13-mlogfilter-*.zip
 
   create-release:
     name: Create Release
@@ -100,8 +100,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/x86_64-unknown-linux-gnu-release/chat-message-filter-linux-x86_64.zip
-          asset_name: chat-message-filter-linux-x86_64.zip
+          asset_path: ./artifacts/x86_64-unknown-linux-gnu-release/ss13-mlogfilter-linux.zip
+          asset_name: ss13-mlogfilter-linux.zip
           asset_content_type: application/zip
 
       - name: Upload Release Assets
@@ -110,6 +110,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/x86_64-pc-windows-gnu-release/chat-message-filter-windows-x86_64.zip
-          asset_name: DMIAssistant-windows-x86_64.zip
+          asset_path: ./artifacts/x86_64-pc-windows-gnu-release/ss13-mlogfilter-windows.zip
+          asset_name: ss13-mlogfilter-windows.zip
           asset_content_type: application/zip
