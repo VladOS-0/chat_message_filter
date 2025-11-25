@@ -1,7 +1,7 @@
 use std::{
     fs::{OpenOptions, read_to_string},
     io::{Read, Write, stdin},
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::exit,
     time::Instant,
 };
@@ -145,8 +145,8 @@ fn main() {
 
 fn get_path_for_output(
     index: usize,
-    outputs: &Vec<PathBuf>,
-    path: &PathBuf,
+    outputs: &[PathBuf],
+    path: &Path,
     base_dir: &Option<PathBuf>,
 ) -> PathBuf {
     if let Some(output) = outputs.get(index) {
@@ -170,10 +170,10 @@ fn process_path(
     config: &Config,
     overwrite: bool,
 ) -> Result<(), anyhow::Error> {
-    let chat_log = read_to_string(&path)
+    let chat_log = read_to_string(path)
         .map_err(|err| anyhow::format_err!("error while reading the input file: {}", err))?;
 
-    let filtered_chat_log = filter_chat_log(chat_log, &config).unwrap_or_else(|err| {
+    let filtered_chat_log = filter_chat_log(chat_log, config).unwrap_or_else(|err| {
         eprintln!("filter error: {}", err);
         exit(1);
     });
@@ -183,7 +183,7 @@ fn process_path(
         .create_new(!overwrite)
         .create(overwrite)
         .truncate(overwrite)
-        .open(&output_path)
+        .open(output_path)
         .unwrap_or_else(|err| {
             eprintln!(
                 "error while creating the output file in {}: {}",
